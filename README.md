@@ -1,8 +1,8 @@
 # Vice Cover
 
 [![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/juggle-ales-8k/gta6-cover-art/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/juggle-ales-8k/gta6-cover-art/reward.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/vcspeeper-cmd/vice-cover/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/vcspeeper-cmd/vice-cover/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
 **Vice Cover** is a professional offline GTA-style multi-panel cover art studio built entirely with plain HTML, CSS, and ES modules on Canvas 2D—no external libraries, build tools, or network requests. Drop in your own photos or start from Vice City samples, reframe panels, dial in custom-drawn display lettering with true proportional character advance widths, choose from five layout modes and five colour grades, and export full-resolution PNG posters directly in the browser.
 
@@ -32,11 +32,13 @@ Colour grading runs directly on the composed Canvas 2D `ImageData` buffer using 
 ### Custom-Drawn Display Lettering
 
 Headlines and optional subtitles render in bold condensed uppercase with:
+
 - **Vector outline glyphs** (A–Z, 0–9, space, `-`, `'`, `!`, `?`, `.`, `&`) with character advance tables (`I`/`1` narrow at 0.36–0.32 em, `M`/`W` wide at 0.82–0.88 em, rest balanced).
 - **Auto-fit sizing and line splitter** — intelligently wraps and centers headline text across one or two lines while maintaining correct aspect ratio and advance spacing.
 - **Hard drop shadow**, **chromatic fringe**, and **dark backing glow** for clear legibility on complex panel backgrounds.
 
 Three distinct finishes:
+
 - **Block (`block`)** — Iconic solid white GTA lettering with heavy black ink outline and thin light inner rim.
 - **Chrome (`chrome`)** — 1980s metallic horizon gradient with dark ink framing and bevel highlights.
 - **Neon (`neon`)** — Dark ink housing lit by dual magenta and cyan bloom glows over bright gradient core.
@@ -44,18 +46,22 @@ Three distinct finishes:
 ## Development & Usage
 
 Serve locally with Node 22+:
+
 ```bash
 node serve.ts
 ```
+
 Then open http://localhost:8080.
 
 Validate and build dossier:
+
 ```bash
 node main.ts --check
 mkdir -p out_gate && MAKEFUN_OUTPUT_DIR=out_gate node main.ts
 ```
 
 Regenerate screenshots:
+
 ```bash
 node shots.mjs
 ```
