@@ -21,7 +21,10 @@
     <section class="group">
       <div class="group-head">
         <h2 class="group-title">Presets</h2>
-        <button type="button" id="shuffle-preset-btn" class="action-btn" title="Press P to shuffle presets">Shuffle</button>
+        <div class="btn-group-sm">
+          <button type="button" id="new-caption-btn" class="action-btn" title="Generate new caption">New caption</button>
+          <button type="button" id="shuffle-preset-btn" class="action-btn" title="Press P to shuffle presets">Shuffle</button>
+        </div>
       </div>
       <div id="preset-strip" class="preset-strip" role="group" aria-label="Poster presets">
         <!-- Preset buttons generated dynamically or static -->
@@ -38,6 +41,14 @@
         <span>Tagline (optional)</span>
         <input id="subtitle-input" type="text" maxlength="40" placeholder="SOUTH BEACH EDITION" value="SOUTH BEACH EDITION" autocomplete="off">
       </label>
+      <div class="mood-chips" role="group" aria-label="Mood selection">
+        <button type="button" class="mood-chip" data-mood="heat">Heat</button>
+        <button type="button" class="mood-chip" data-mood="night">Night</button>
+        <button type="button" class="mood-chip" data-mood="salt">Salt</button>
+        <button type="button" class="mood-chip" data-mood="chrome">Chrome</button>
+        <button type="button" class="mood-chip" data-mood="dust">Dust</button>
+        <button type="button" class="mood-chip" data-mood="rain">Rain</button>
+      </div>
     </section>
 
     <section class="group">

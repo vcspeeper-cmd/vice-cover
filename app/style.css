@@ -272,11 +272,46 @@ html, body {
 .swatch-gold   { background: linear-gradient(135deg, #ffd147, #a8420c); }
 .swatch-vice   { background: linear-gradient(135deg, #ff55bb, #38f2ff); }
 
-.btn-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.btn-group-sm {
+  display: flex;
+  gap: 4px;
 }
+
+.mood-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.mood-chip {
+  appearance: none;
+  background: var(--panel-elev);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.mood-chip:hover {
+  border-color: var(--accent-cyan);
+  color: #fff;
+  background: rgba(56, 242, 255, 0.12);
+}
+
+.mood-chip.is-active {
+  background: var(--accent-pink);
+  border-color: var(--accent-pink);
+  color: #fff;
+}
+
 
 .action-btn {
   appearance: none;

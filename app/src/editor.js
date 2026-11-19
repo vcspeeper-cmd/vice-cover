@@ -5,6 +5,7 @@ import { computePanels, hitTestPanel, SIZES } from './layout.js';
 import { renderPoster, exportPosterPng } from './render.js';
 import { PRESETS, nextPreset, randomPreset } from './presets.js';
 import { mulberry32 } from './prng.js';
+import { makeCaption, makeCaptionFor } from './wordbank.js';
 
 const MAX_PANELS = 5;
 
@@ -297,6 +298,37 @@ export function initEditor(state, options = {}) {
       }
     });
   }
+
+  // Caption generator bindings
+  const newCaptionBtn = document.getElementById('new-caption-btn');
+  if (newCaptionBtn) {
+    newCaptionBtn.addEventListener('click', () => {
+      pushUndo();
+      state.seed = ((Math.imul(state.seed, 1664525) + 1013904223) >>> 0) % 9000 + 1000;
+      const rng = mulberry32(state.seed);
+      const cap = makeCaption(rng);
+      state.caption = cap.headline;
+      state.subtitle = cap.tagline;
+      syncControlsFromState();
+      renderNow();
+      setStatus(`Generated caption: "${cap.headline}" (${cap.mood}).`);
+    });
+  }
+
+  document.querySelectorAll('[data-mood]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      pushUndo();
+      const mood = btn.dataset.mood;
+      state.seed = ((Math.imul(state.seed, 1664525) + 1013904223) >>> 0) % 9000 + 1000;
+      const rng = mulberry32(state.seed);
+      const cap = makeCaptionFor(mood, rng);
+      state.caption = cap.headline;
+      state.subtitle = cap.tagline;
+      syncControlsFromState();
+      renderNow();
+      setStatus(`Generated ${mood} caption: "${cap.headline}".`);
+    });
+  });
 
   // Layout buttons with shortcuts
   document.querySelectorAll('[data-layout]').forEach((btn, idx) => {
