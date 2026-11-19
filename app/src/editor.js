@@ -3,6 +3,8 @@
 
 import { computePanels, hitTestPanel, SIZES } from './layout.js';
 import { renderPoster, exportPosterPng } from './render.js';
+import { PRESETS, nextPreset, randomPreset } from './presets.js';
+import { mulberry32 } from './prng.js';
 
 const MAX_PANELS = 5;
 
@@ -26,6 +28,7 @@ export function createInitialState() {
     caption: 'MIDNIGHT IN LEONIDA',
     subtitle: 'SOUTH BEACH EDITION',
     seed: 1986,
+    activePresetId: null,
     selectedPanel: 0,
     panels: Array.from({ length: MAX_PANELS }, () => ({
       img: null,
@@ -179,6 +182,10 @@ export function initEditor(state, options = {}) {
       btn.classList.toggle('is-active', btn.dataset.size === state.size);
       btn.setAttribute('aria-pressed', String(btn.dataset.size === state.size));
     });
+    document.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.preset === state.activePresetId);
+      btn.setAttribute('aria-pressed', String(btn.dataset.preset === state.activePresetId));
+    });
   }
 
   function renderNow() {
@@ -247,6 +254,48 @@ export function initEditor(state, options = {}) {
       setStatus('Could not decode one of the selected images.');
       redoStack.pop();
     }
+  }
+
+  function applyPresetObj(preset, isUndoable = true) {
+    if (!preset) return;
+    if (isUndoable) pushUndo();
+    state.caption = preset.caption;
+    state.subtitle = preset.tagline;
+    state.layout = preset.layout;
+    state.grade = preset.grade;
+    state.lettering = preset.lettering;
+    state.seed = preset.seed;
+    state.activePresetId = preset.id;
+    syncControlsFromState();
+    renderNow();
+    setStatus(`Applied preset: ${preset.label} (${preset.mood}).`);
+  }
+
+  // Preset strip rendering & listeners
+  const presetStripEl = document.getElementById('preset-strip');
+  if (presetStripEl) {
+    presetStripEl.innerHTML = '';
+    for (const preset of PRESETS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'preset-btn';
+      btn.dataset.preset = preset.id;
+      btn.textContent = preset.label;
+      btn.title = `${preset.label} — ${preset.mood}`;
+      btn.addEventListener('click', () => applyPresetObj(preset));
+      presetStripEl.appendChild(btn);
+    }
+  }
+
+  const shufflePresetBtn = document.getElementById('shuffle-preset-btn');
+  if (shufflePresetBtn) {
+    shufflePresetBtn.addEventListener('click', () => {
+      const rng = mulberry32(state.seed || 12345);
+      const chosen = randomPreset(rng);
+      if (chosen) {
+        applyPresetObj(chosen);
+      }
+    });
   }
 
   // Layout buttons with shortcuts
@@ -584,6 +633,24 @@ export function initEditor(state, options = {}) {
       state.seed = ((Math.imul(state.seed, 1664525) + 1013904223) >>> 0) % 9000 + 1000;
       syncControlsFromState();
       renderNow();
+    }
+
+    // Preset navigation: P / Shift+P or BracketRight / BracketLeft
+    if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey) {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      const step = e.shiftKey ? -1 : 1;
+      const next = nextPreset(state.activePresetId, step);
+      if (next) applyPresetObj(next);
+    }
+    if ((e.key === ']' || e.key === '[') && !e.ctrlKey && !e.metaKey) {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      const step = e.key === ']' ? 1 : -1;
+      const next = nextPreset(state.activePresetId, step);
+      if (next) applyPresetObj(next);
     }
 
     // Export: E
