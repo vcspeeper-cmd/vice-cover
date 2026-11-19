@@ -1,5 +1,5 @@
-// Editor controller: manages application state, sample presets, file loading,
-// drag-and-drop, per-panel pan & wheel zoom, UI bindings, and full-res PNG export.
+// Editor controller: manages application state, per-panel pan & zoom, UI bindings, and full-res PNG export.
+// Supports keyboard shortcuts and undo/redo stack for a professional editing experience.
 
 import { computePanels, hitTestPanel, SIZES } from './layout.js';
 import { renderPoster, exportPosterPng } from './render.js';
@@ -37,9 +37,7 @@ export function createInitialState() {
 }
 
 /**
- * Loads the built-in sample photos (samples/pier.jpg and samples/boulevard.jpg) and populates
- * the panels with curated varied crops/zooms so every multi-panel composition looks like a
- * real cinematic GTA poster out of the box.
+ * Loads the built-in sample photos and populates panels with curated varied crops.
  */
 export async function loadSamplePhotos(state) {
   const [pier, boulevard] = await Promise.all([
@@ -47,7 +45,6 @@ export async function loadSamplePhotos(state) {
     loadImage('./samples/boulevard.jpg'),
   ]);
 
-  // Curated crop framing across the 5 slots so each panel frames a distinct beat of the scene
   const presets = [
     { img: boulevard, panX: 0.0, panY: -0.06, zoom: 1.08 },
     { img: pier, panX: -0.42, panY: -0.25, zoom: 1.55 },
@@ -61,7 +58,7 @@ export async function loadSamplePhotos(state) {
   }
 }
 
-/** Builds a clean filename slug from the current caption and dimensions. */
+/** Builds a clean filename slug from the caption and dimensions. */
 function makeExportFilename(caption, w, h) {
   const slug = (caption || 'vice-cover')
     .toLowerCase()
@@ -71,10 +68,9 @@ function makeExportFilename(caption, w, h) {
   return `vice-cover-${slug}-${w}x${h}.png`;
 }
 
-/** Computes a responsive preview canvas resolution matching the chosen aspect ratio. */
+/** Computes a responsive preview canvas resolution matching the aspect ratio. */
 function previewDimensions(sizeId) {
   const spec = SIZES[sizeId] ?? SIZES.tall;
-  // Render preview at crisp ~840px long edge so pixel grading stays fast and smooth while dragging
   const maxEdge = 860;
   const scale = maxEdge / Math.max(spec.w, spec.h);
   return {
@@ -83,7 +79,7 @@ function previewDimensions(sizeId) {
   };
 }
 
-/** Initializes the interactive editor UI and wires all controls + canvas pointer gestures. */
+/** Initializes the interactive editor UI with keyboard shortcuts and undo/redo. */
 export function initEditor(state, options = {}) {
   const { isShotMode = false } = options;
   const canvas = document.getElementById('poster-canvas');
@@ -109,6 +105,36 @@ export function initEditor(state, options = {}) {
   let dragStartPanY = 0;
   let dragPanelIdx = -1;
   let dragDepth = 0;
+
+  // Undo/redo stack
+  const undoStack = [];
+  const redoStack = [];
+
+  function pushUndo() {
+    undoStack.push(JSON.stringify(state));
+    redoStack.length = 0;
+    if (undoStack.length > 50) undoStack.shift();
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    redoStack.push(JSON.stringify(state));
+    const prevState = JSON.parse(undoStack.pop());
+    Object.assign(state, prevState);
+    syncControlsFromState();
+    renderNow();
+    setStatus('Undo.');
+  }
+
+  function redo() {
+    if (redoStack.length === 0) return;
+    undoStack.push(JSON.stringify(state));
+    const nextState = JSON.parse(redoStack.pop());
+    Object.assign(state, nextState);
+    syncControlsFromState();
+    renderNow();
+    setStatus('Redo.');
+  }
 
   function setStatus(msg) {
     if (statusEl) statusEl.textContent = msg;
@@ -172,7 +198,7 @@ export function initEditor(state, options = {}) {
     requestAnimationFrame(renderNow);
   }
 
-  /** Converts pointer event client coordinates into internal canvas coordinates. */
+  /** Converts pointer event client coordinates into canvas coordinates. */
   function eventToCanvasPoint(evt) {
     const rect = canvas.getBoundingClientRect();
     const sx = canvas.width / rect.width;
@@ -190,6 +216,7 @@ export function initEditor(state, options = {}) {
       return;
     }
     try {
+      pushUndo();
       const images = await Promise.all(
         files.map((f) => loadImage(URL.createObjectURL(f)))
       );
@@ -218,42 +245,51 @@ export function initEditor(state, options = {}) {
       renderNow();
     } catch {
       setStatus('Could not decode one of the selected images.');
+      redoStack.pop();
     }
   }
 
-  // Control group click handlers
-  document.querySelectorAll('[data-layout]').forEach((btn) => {
+  // Layout buttons with shortcuts
+  document.querySelectorAll('[data-layout]').forEach((btn, idx) => {
     btn.addEventListener('click', () => {
+      pushUndo();
       state.layout = btn.dataset.layout;
       syncControlsFromState();
       renderNow();
     });
   });
 
+  // Grade buttons
   document.querySelectorAll('[data-grade]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      pushUndo();
       state.grade = btn.dataset.grade;
       syncControlsFromState();
       renderNow();
     });
   });
 
+  // Lettering buttons
   document.querySelectorAll('[data-lettering]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      pushUndo();
       state.lettering = btn.dataset.lettering;
       syncControlsFromState();
       renderNow();
     });
   });
 
+  // Size buttons
   document.querySelectorAll('[data-size]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      pushUndo();
       state.size = btn.dataset.size;
       syncControlsFromState();
       renderNow();
     });
   });
 
+  // Caption input
   if (captionInput) {
     captionInput.addEventListener('input', () => {
       state.caption = captionInput.value.slice(0, 40);
@@ -261,6 +297,7 @@ export function initEditor(state, options = {}) {
     });
   }
 
+  // Subtitle input
   if (subtitleInput) {
     subtitleInput.addEventListener('input', () => {
       state.subtitle = subtitleInput.value.slice(0, 40);
@@ -268,6 +305,7 @@ export function initEditor(state, options = {}) {
     });
   }
 
+  // Photo input
   if (photoInput) {
     photoInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files.length > 0) {
@@ -285,9 +323,11 @@ export function initEditor(state, options = {}) {
   const fillAllBtn = document.getElementById('fill-all-btn');
   if (fillAllBtn) {
     fillAllBtn.addEventListener('click', () => {
+      pushUndo();
       const src = state.panels[state.selectedPanel];
       if (!src || !src.img) {
         setStatus('Select a panel with a photo first.');
+        redoStack.pop();
         return;
       }
       for (let i = 0; i < MAX_PANELS; i++) {
@@ -307,6 +347,7 @@ export function initEditor(state, options = {}) {
   const samplesBtn = document.getElementById('use-samples-btn');
   if (samplesBtn) {
     samplesBtn.addEventListener('click', async () => {
+      pushUndo();
       await loadSamplePhotos(state);
       syncControlsFromState();
       renderNow();
@@ -317,8 +358,12 @@ export function initEditor(state, options = {}) {
   const resetCropBtn = document.getElementById('reset-crop-btn');
   if (resetCropBtn) {
     resetCropBtn.addEventListener('click', () => {
+      pushUndo();
       const slot = state.panels[state.selectedPanel];
-      if (!slot) return;
+      if (!slot) {
+        redoStack.pop();
+        return;
+      }
       slot.panX = 0;
       slot.panY = 0;
       slot.zoom = 1;
@@ -341,7 +386,7 @@ export function initEditor(state, options = {}) {
   const rerollBtn = document.getElementById('reroll-seed-btn');
   if (rerollBtn) {
     rerollBtn.addEventListener('click', () => {
-      // Deterministic stepping with a nice 4-digit visible seed
+      pushUndo();
       state.seed = ((Math.imul(state.seed, 1664525) + 1013904223) >>> 0) % 9000 + 1000;
       syncControlsFromState();
       renderNow();
@@ -349,7 +394,7 @@ export function initEditor(state, options = {}) {
     });
   }
 
-  // Export buttons: always render at exact target resolution on a dedicated offscreen canvas
+  // Export buttons
   document.querySelectorAll('[data-export]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const [w, h] = btn.dataset.export.split('x').map(Number);
@@ -357,7 +402,6 @@ export function initEditor(state, options = {}) {
       setStatus(`Rendering full-res ${w}x${h} PNG...`);
       btn.disabled = true;
       try {
-        // Yield a frame so status text paints before CPU-intensive pixel grading runs
         await new Promise((r) => requestAnimationFrame(r));
         const res = await exportPosterPng(state, w, h, filename);
         const kb = Math.round(res.bytes / 1024);
@@ -370,7 +414,7 @@ export function initEditor(state, options = {}) {
     });
   });
 
-  // Canvas pointer interaction: click selects panel, drag pans photo inside panel
+  // Canvas pointer interaction
   canvas.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     const pt = eventToCanvasPoint(e);
@@ -434,7 +478,7 @@ export function initEditor(state, options = {}) {
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
 
-  // Mouse wheel over any panel zooms that panel smoothly (1.0x to 4.0x)
+  // Mouse wheel zoom
   canvas.addEventListener('wheel', (e) => {
     const pt = eventToCanvasPoint(e);
     const hit = hitTestPanel(currentPanels, pt.x, pt.y);
@@ -448,7 +492,7 @@ export function initEditor(state, options = {}) {
     scheduleRender();
   }, { passive: false });
 
-  // Whole-page drag-and-drop photo support
+  // Drag and drop
   window.addEventListener('dragenter', (e) => {
     e.preventDefault();
     dragDepth += 1;
@@ -472,7 +516,6 @@ export function initEditor(state, options = {}) {
     dragDepth = 0;
     if (dropOverlay) dropOverlay.classList.remove('is-visible');
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      // If dropped directly over a panel, target that panel first
       const pt = eventToCanvasPoint(e);
       const hit = hitTestPanel(currentPanels, pt.x, pt.y);
       if (hit >= 0) state.selectedPanel = hit;
@@ -487,6 +530,80 @@ export function initEditor(state, options = {}) {
       }
     });
   }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const layouts = ['hero', 'grid', 'strip', 'mosaic'];
+    const grades = ['sunset', 'neon', 'noir', 'gold'];
+    const lettering = ['block', 'chrome', 'neon'];
+
+    // Layout shortcuts: 1-4
+    if (e.key === '1') {
+      pushUndo();
+      state.layout = layouts[0];
+      syncControlsFromState();
+      renderNow();
+    } else if (e.key === '2') {
+      pushUndo();
+      state.layout = layouts[1];
+      syncControlsFromState();
+      renderNow();
+    } else if (e.key === '3') {
+      pushUndo();
+      state.layout = layouts[2];
+      syncControlsFromState();
+      renderNow();
+    } else if (e.key === '4') {
+      pushUndo();
+      state.layout = layouts[3];
+      syncControlsFromState();
+      renderNow();
+    }
+
+    // Grade cycle: Z
+    if (e.key === 'z' && !e.ctrlKey && !e.metaKey) {
+      pushUndo();
+      const idx = grades.indexOf(state.grade);
+      state.grade = grades[(idx + 1) % grades.length];
+      syncControlsFromState();
+      renderNow();
+    }
+
+    // Lettering cycle: L
+    if (e.key === 'l' || e.key === 'L') {
+      pushUndo();
+      const idx = lettering.indexOf(state.lettering);
+      state.lettering = lettering[(idx + 1) % lettering.length];
+      syncControlsFromState();
+      renderNow();
+    }
+
+    // Reseed: R
+    if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
+      pushUndo();
+      state.seed = ((Math.imul(state.seed, 1664525) + 1013904223) >>> 0) % 9000 + 1000;
+      syncControlsFromState();
+      renderNow();
+    }
+
+    // Export: E
+    if (e.key === 'e' || e.key === 'E') {
+      const btn = document.querySelector('[data-export="1080x1350"]');
+      if (btn) btn.click();
+    }
+
+    // Undo: Ctrl/Cmd+Z
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+
+    // Redo: Ctrl/Cmd+Shift+Z
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+      e.preventDefault();
+      redo();
+    }
+  });
 
   syncControlsFromState();
   renderNow();

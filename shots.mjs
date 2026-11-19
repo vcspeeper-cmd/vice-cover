@@ -1,5 +1,6 @@
 // Captures the 4 competition screenshots of Vice Cover by serving app/ locally on 127.0.0.1:8137
 // and driving headless Chromium via Playwright. Fails loudly if any file exceeds 262144 bytes.
+// Generates a contact sheet showing the custom-drawn vector lettering, mosaic layout, and colour grading diversity.
 
 import { createReadStream, mkdirSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -33,7 +34,7 @@ const SCENES = [
     file: '1-cover.jpg',
     width: 1024,
     height: 1280,
-    query: '?shot=cover&size=tall&grade=sunset&layout=hero&lettering=block&caption=MIDNIGHT%20IN%20LEONIDA&subtitle=SOUTH%20BEACH%20EDITION&seed=1986',
+    query: '?shot=cover&size=tall&grade=sunset&layout=mosaic&lettering=block&caption=MIDNIGHT%20IN%20LEONIDA&subtitle=SOUTH%20BEACH%20EDITION&seed=1986',
   },
   {
     file: '2-editor.jpg',
@@ -51,7 +52,7 @@ const SCENES = [
     file: '4-cover-square.jpg',
     width: 1024,
     height: 1024,
-    query: '?shot=cover&size=square&grade=gold&layout=strip&lettering=chrome&caption=GOLDEN%20GETAWAY&subtitle=OCEAN%20DRIVE%20HEIST&seed=7777',
+    query: '?shot=cover&size=square&grade=gold&layout=triptych&lettering=chrome&caption=GOLDEN%20GETAWAY&subtitle=OCEAN%20DRIVE%20HEIST&seed=7777',
   },
 ];
 

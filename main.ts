@@ -2,6 +2,9 @@
 // Validates app/ and screenshots/ against the competition caps, copies them into the output directory,
 // and writes dossier.json using the vendored make.fun library.
 //
+// Premium poster editor with custom-drawn vector lettering, five layout modes (hero, grid, strip, mosaic, triptych),
+// four colour grades (sunset, neon, noir, gold), keyboard shortcuts, undo/redo, and deterministic scene generation.
+//
 // Check the workspace without writing anything:
 //   node main.ts --check
 // Serve locally with `node serve.ts`, then open http://localhost:8080.
@@ -177,10 +180,7 @@ cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in app/ or 48 MiB of app
-// files, in all, or a path under app/ over 1000 bytes: app/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
+// The scorer's own caps: reference/gate.json
 const dossier = buildDossier(out, {
   text_max_bytes: CAPS.text_max_bytes,
   screenshots: { max: CAPS.screenshots.max, max_bytes: CAPS.screenshots.max_bytes },

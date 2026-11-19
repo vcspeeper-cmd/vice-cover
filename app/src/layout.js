@@ -4,6 +4,8 @@ export const LAYOUTS = [
   { id: 'hero', label: 'Hero + 2x2' },
   { id: 'grid', label: 'Banner + 4' },
   { id: 'strip', label: 'Triple Strip' },
+  { id: 'mosaic', label: 'Mosaic 1+5' },
+  { id: 'triptych', label: 'Triptych' },
 ];
 
 export const SIZES = {
@@ -14,8 +16,7 @@ export const SIZES = {
 
 /**
  * Returns panel rectangles in canvas coordinates for the chosen layout and poster dimensions.
- * Panels sit inside a balanced poster frame, leaving breathing room for the sunset sky,
- * skyline, palms, and caption badge while staying bold and comic-book sharp.
+ * Panels sit inside a balanced poster frame with sophisticated geometry for poster impact.
  */
 export function computePanels(layoutId, width, height) {
   const unit = Math.min(width, height);
@@ -29,8 +30,40 @@ export function computePanels(layoutId, width, height) {
   const innerW = width - padX * 2;
   const innerH = height - padTop - padBottom;
 
+  if (layoutId === 'triptych') {
+    // Three tall equal-width vertical panels with a wide title band at bottom
+    const panelW = Math.round((innerW - gutter * 2) / 3);
+    const titleBandH = Math.round(height * 0.18);
+    const panelH = innerH - titleBandH - gutter;
+
+    return [
+      { id: 0, x: innerX, y: innerY, w: panelW, h: panelH, role: 'panel' },
+      { id: 1, x: innerX + panelW + gutter, y: innerY, w: panelW, h: panelH, role: 'panel' },
+      { id: 2, x: innerX + (panelW + gutter) * 2, y: innerY, w: panelW, h: panelH, role: 'panel' },
+    ];
+  }
+
+  if (layoutId === 'mosaic') {
+    // One large 3-row hero on left, five smaller tilted panels arranged on right
+    const leftW = Math.round((innerW - gutter) * 0.55);
+    const rightX = innerX + leftW + gutter;
+    const rightW = innerW - leftW - gutter;
+
+    const heroH = innerH;
+    const smallW = Math.round((rightW - gutter) / 2);
+    const smallH = Math.round((innerH - gutter * 2) / 3);
+
+    return [
+      { id: 0, x: innerX, y: innerY, w: leftW, h: heroH, role: 'hero', tilt: 0 },
+      { id: 1, x: rightX, y: innerY, w: smallW, h: smallH, role: 'cell', tilt: 1.8 },
+      { id: 2, x: rightX + smallW + gutter, y: innerY, w: smallW, h: smallH, role: 'cell', tilt: -2.2 },
+      { id: 3, x: rightX, y: innerY + smallH + gutter, w: smallW, h: smallH, role: 'cell', tilt: -1.5 },
+      { id: 4, x: rightX + smallW + gutter, y: innerY + smallH + gutter, w: smallW, h: smallH, role: 'cell', tilt: 2.1 },
+    ];
+  }
+
   if (layoutId === 'grid') {
-    // Five panels: one wide cinematic banner across the top and four varied panels below.
+    // Five panels: wide banner across top, four below
     const topH = Math.round(innerH * 0.42);
     const botY = innerY + topH + gutter;
     const botH = innerH - topH - gutter;

@@ -155,8 +155,8 @@ html, body {
   gap: 5px;
 }
 
-.seg-3 {
-  grid-template-columns: repeat(3, 1fr);
+.seg-4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .seg-btn {

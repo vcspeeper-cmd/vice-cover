@@ -1,5 +1,5 @@
-// Master deterministic poster renderer: composes sky backdrop, multi-panel photos with
-// ink borders and inner hairlines, per-pixel colour grade, skyline, palms, grain, vignette, and lettering.
+// Master deterministic poster renderer: composes cream frame, sky backdrop, multi-panel photos,
+// per-pixel colour grade, skyline, palms, grain, vignette, and custom-drawn lettering.
 
 import { computePanels } from './layout.js';
 import { applyColorGrade, getGradePalette } from './grade.js';
@@ -7,8 +7,7 @@ import { drawSkyBackdrop, drawCitySkyline, drawPalmRow, drawFilmGrain, drawVigne
 import { drawCaption } from './lettering.js';
 
 /**
- * Draws a single photo clipped into a panel rectangle with cover scaling, per-panel zoom (1..4x)
- * and normalized pan offsets (panX, panY in [-1, 1] relative to available overflow).
+ * Draws a single photo clipped into a panel rectangle with cover scaling and per-panel pan/zoom.
  */
 function drawPanelPhoto(ctx, rect, slot, gradePalette) {
   ctx.save();
@@ -35,7 +34,7 @@ function drawPanelPhoto(ctx, rect, slot, gradePalette) {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, dx, dy, drawW, drawH);
 
-    // Subtle illustrative edge contrast gradient inside each panel for poster depth
+    // Subtle edge contrast gradient inside panel for depth
     const panelShade = ctx.createLinearGradient(rect.x, rect.y, rect.x, rect.y + rect.h);
     panelShade.addColorStop(0, 'rgba(255, 210, 170, 0.08)');
     panelShade.addColorStop(0.55, 'rgba(0, 0, 0, 0)');
@@ -43,7 +42,7 @@ function drawPanelPhoto(ctx, rect, slot, gradePalette) {
     ctx.fillStyle = panelShade;
     ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
   } else {
-    // Rich placeholder gradient if a panel has no photo assigned yet
+    // Placeholder gradient if no photo
     const phGrad = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
     phGrad.addColorStop(0, gradePalette.sky[1]);
     phGrad.addColorStop(1, gradePalette.sky[2]);
@@ -58,7 +57,7 @@ function drawPanelPhoto(ctx, rect, slot, gradePalette) {
 function drawPanelFrame(ctx, rect, unit, isSelected) {
   const inkW = Math.max(2, Math.min(4, Math.round(unit * 0.0032)));
 
-  // Soft outer drop shadow to lift panel slightly off the sunset backdrop
+  // Soft outer drop shadow
   ctx.save();
   ctx.shadowColor = 'rgba(6, 2, 14, 0.45)';
   ctx.shadowBlur = Math.max(6, unit * 0.01);
@@ -68,19 +67,19 @@ function drawPanelFrame(ctx, rect, unit, isSelected) {
   ctx.strokeRect(rect.x + inkW * 0.5, rect.y + inkW * 0.5, rect.w - inkW, rect.h - inkW);
   ctx.restore();
 
-  // Crisp dark ink outer border (2-4 px)
+  // Dark ink outer border
   ctx.save();
   ctx.strokeStyle = '#0a0610';
   ctx.lineWidth = inkW;
   ctx.strokeRect(rect.x + inkW * 0.5, rect.y + inkW * 0.5, rect.w - inkW, rect.h - inkW);
 
-  // Hairline light inner edge like a screen-printed comic poster
+  // Hairline light inner edge
   const inset = inkW + 1;
   ctx.strokeStyle = 'rgba(255, 245, 232, 0.55)';
   ctx.lineWidth = 1;
   ctx.strokeRect(rect.x + inset, rect.y + inset, rect.w - inset * 2, rect.h - inset * 2);
 
-  // Interactive selection outline (editor preview only, never exported)
+  // Selection outline (editor only)
   if (isSelected) {
     ctx.strokeStyle = '#38f2ff';
     ctx.lineWidth = Math.max(2, Math.round(unit * 0.0035));
@@ -91,8 +90,8 @@ function drawPanelFrame(ctx, rect, unit, isSelected) {
 }
 
 /**
- * Renders the full Vice Cover poster onto `canvas` at `canvas.width` x `canvas.height`.
- * Returns the computed panel rectangles for hit-testing in the editor.
+ * Renders the full Vice Cover poster onto `canvas` at full resolution.
+ * Returns the computed panel rectangles for hit-testing.
  */
 export function renderPoster(canvas, state, options = {}) {
   const { showSelection = false } = options;
@@ -102,24 +101,28 @@ export function renderPoster(canvas, state, options = {}) {
   const unit = Math.min(width, height);
   const gradePalette = getGradePalette(state.grade);
 
-  // 1. Sunset sky backdrop with sun disc & horizontal haze bands
+  // 1. Cream poster background
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. Sunset sky backdrop with sun disc & haze
   drawSkyBackdrop(ctx, width, height, state.grade, state.seed);
 
-  // 2. Multi-panel layout photos
+  // 3. Multi-panel layout photos
   const panels = computePanels(state.layout, width, height);
   for (let i = 0; i < panels.length; i++) {
     drawPanelPhoto(ctx, panels[i], state.panels[i], gradePalette);
   }
 
-  // 3. Real per-pixel colour grade across the composed sky + photo panels
+  // 4. Real per-pixel colour grade
   applyColorGrade(ctx, width, height, state.grade);
 
-  // 4. Crisp ink panel borders & light inner hairlines (kept razor sharp after grade)
+  // 5. Crisp ink panel borders & light inner hairlines
   for (let i = 0; i < panels.length; i++) {
     drawPanelFrame(ctx, panels[i], unit, false);
   }
 
-  // 5. Outer poster hairline frame accent
+  // 6. Outer poster hairline frame accent
   ctx.save();
   const outerInset = Math.max(8, Math.round(unit * 0.014));
   ctx.strokeStyle = 'rgba(255, 240, 224, 0.24)';
@@ -127,20 +130,20 @@ export function renderPoster(canvas, state, options = {}) {
   ctx.strokeRect(outerInset, outerInset, width - outerInset * 2, height - outerInset * 2);
   ctx.restore();
 
-  // 6. Seeded city skyline silhouette with lit windows along the bottom
+  // 7. Seeded city skyline with lit windows
   drawCitySkyline(ctx, width, height, state.grade, state.seed);
 
-  // 7. Palm-tree silhouette row framing the bottom & flanks
+  // 8. Palm-tree silhouette row
   drawPalmRow(ctx, width, height, state.grade, state.seed);
 
-  // 8. Film grain & cinematic vignette
+  // 9. Film grain & vignette
   drawFilmGrain(ctx, width, height, state.seed, 0.032);
   drawVignette(ctx, width, height);
 
-  // 9. Bold condensed GTA-style caption + optional subtitle with chromatic fringe
+  // 10. Custom-drawn GTA-style caption + subtitle
   drawCaption(ctx, width, height, state.caption, state.subtitle, state.lettering, state.grade);
 
-  // 10. Optional editor selection indicator (drawn last, excluded on export / cover shots)
+  // 11. Optional editor selection indicator
   if (showSelection && state.selectedPanel >= 0 && state.selectedPanel < panels.length) {
     const sel = panels[state.selectedPanel];
     ctx.save();
@@ -150,7 +153,7 @@ export function renderPoster(canvas, state, options = {}) {
     ctx.shadowBlur = 10;
     ctx.strokeRect(sel.x + 2, sel.y + 2, sel.w - 4, sel.h - 4);
 
-    // Small panel badge tag in top-left corner of selected panel
+    // Panel badge tag
     const badgeH = Math.max(22, Math.round(unit * 0.032));
     const badgeW = Math.max(76, Math.round(unit * 0.11));
     ctx.shadowBlur = 0;
@@ -171,7 +174,7 @@ export function renderPoster(canvas, state, options = {}) {
 }
 
 /**
- * Re-renders the poster at full target resolution into a fresh offscreen canvas and triggers PNG download.
+ * Re-renders the poster at full target resolution onto a fresh offscreen canvas and triggers PNG download.
  */
 export function exportPosterPng(state, targetW, targetH, filename) {
   return new Promise((resolve, reject) => {

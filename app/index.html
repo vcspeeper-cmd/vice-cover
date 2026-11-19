@@ -22,20 +22,21 @@
       <h2 class="group-title">Caption</h2>
       <label class="field">
         <span>Headline</span>
-        <input id="caption-input" type="text" maxlength="40" placeholder="MIDNIGHT IN LEONIDA" value="MIDNIGHT IN LEONIDA">
+        <input id="caption-input" type="text" maxlength="40" placeholder="MIDNIGHT IN LEONIDA" value="MIDNIGHT IN LEONIDA" autocomplete="off">
       </label>
       <label class="field">
-        <span>Subtitle (optional)</span>
-        <input id="subtitle-input" type="text" maxlength="40" placeholder="SOUTH BEACH EDITION" value="SOUTH BEACH EDITION">
+        <span>Tagline (optional)</span>
+        <input id="subtitle-input" type="text" maxlength="40" placeholder="SOUTH BEACH EDITION" value="SOUTH BEACH EDITION" autocomplete="off">
       </label>
     </section>
 
     <section class="group">
       <h2 class="group-title">Layout</h2>
-      <div class="seg-grid seg-3" role="group" aria-label="Poster layout">
-        <button type="button" class="seg-btn is-active" data-layout="hero" aria-pressed="true">Hero + 2x2</button>
-        <button type="button" class="seg-btn" data-layout="grid" aria-pressed="false">Banner + 4</button>
-        <button type="button" class="seg-btn" data-layout="strip" aria-pressed="false">Strip x3</button>
+      <div class="seg-grid seg-4" role="group" aria-label="Poster layout">
+        <button type="button" class="seg-btn is-active" data-layout="hero" aria-pressed="true" title="Press 1">Hero + 2x2</button>
+        <button type="button" class="seg-btn" data-layout="grid" aria-pressed="false" title="Press 2">Banner + 4</button>
+        <button type="button" class="seg-btn" data-layout="strip" aria-pressed="false" title="Press 3">Strip x3</button>
+        <button type="button" class="seg-btn" data-layout="mosaic" aria-pressed="false" title="Press 4">Mosaic</button>
       </div>
     </section>
 
@@ -60,9 +61,9 @@
     <section class="group">
       <h2 class="group-title">Lettering</h2>
       <div class="seg-grid seg-3" role="group" aria-label="Lettering style">
-        <button type="button" class="seg-btn is-active" data-lettering="block" aria-pressed="true">Block</button>
-        <button type="button" class="seg-btn" data-lettering="chrome" aria-pressed="false">Chrome</button>
-        <button type="button" class="seg-btn" data-lettering="neon" aria-pressed="false">Neon</button>
+        <button type="button" class="seg-btn is-active" data-lettering="block" aria-pressed="true" title="Press L">Block</button>
+        <button type="button" class="seg-btn" data-lettering="chrome" aria-pressed="false" title="Press L">Chrome</button>
+        <button type="button" class="seg-btn" data-lettering="neon" aria-pressed="false" title="Press L">Neon</button>
       </div>
     </section>
 
@@ -85,23 +86,24 @@
         <button type="button" id="pick-photos-btn" class="action-btn accent">Add Photos</button>
         <button type="button" id="use-samples-btn" class="action-btn">Use Samples</button>
       </div>
-      <button type="button" id="fill-all-btn" class="action-btn full">Fill all panels with this photo</button>
+      <button type="button" id="fill-all-btn" class="action-btn full">Fill all panels</button>
 
       <label class="slider-field">
         <div class="slider-head">
           <span>Panel Zoom</span>
-          <span id="zoom-readout" class="mono">1.08x</span>
+          <span id="zoom-readout" class="mono">1.00x</span>
         </div>
-        <input id="zoom-slider" type="range" min="1" max="4" step="0.02" value="1.08">
+        <input id="zoom-slider" type="range" min="1" max="4" step="0.02" value="1">
       </label>
 
       <div class="btn-row">
         <button type="button" id="reset-crop-btn" class="action-btn">Reset Crop</button>
-        <button type="button" id="reroll-seed-btn" class="action-btn">
-          Reroll Seed <span id="seed-readout" class="mono muted">#1986</span>
+        <button type="button" id="reroll-seed-btn" class="action-btn" title="Press R">
+          Shuffle Seed <span id="seed-readout" class="mono muted">#1986</span>
         </button>
       </div>
       <p class="hint">Click a panel to select · Drag to pan · Wheel to zoom · Drop photos anywhere</p>
+      <p class="hint">Shortcuts: 1-4 layouts · L lettering · Z grade · E export · R reseed · Ctrl+Z undo</p>
     </section>
   </aside>
 
@@ -115,9 +117,9 @@
     <p id="status" class="status" role="status">Ready · Offline PNG export at native resolution</p>
     <div class="export-bar">
       <span class="export-label">Export PNG</span>
-      <button type="button" class="export-btn" data-export="1080x1080">1080 × 1080</button>
-      <button type="button" class="export-btn primary" data-export="1080x1350">1080 × 1350</button>
-      <button type="button" class="export-btn" data-export="1920x1080">1920 × 1080</button>
+      <button type="button" class="export-btn" data-export="1080x1080" title="Press E then 1">1080×1080</button>
+      <button type="button" class="export-btn primary" data-export="1080x1350" title="Press E then 2">1080×1350</button>
+      <button type="button" class="export-btn" data-export="1920x1080" title="Press E then 3">1920×1080</button>
     </div>
   </footer>
 </div>

@@ -1,5 +1,6 @@
 // Application entry point: boots either a headless screenshot scene (?shot=cover|editor)
 // or the full interactive Vice Cover editor pre-populated with sample photos.
+// Supports multiple layouts (hero, grid, strip, mosaic, triptych) and keyboard shortcuts.
 
 import { SIZES } from './layout.js';
 import { renderPoster } from './render.js';
@@ -15,7 +16,7 @@ function applyQueryParams(state, params) {
   }
 
   const layout = params.get('layout');
-  if (layout && ['hero', 'grid', 'strip'].includes(layout)) {
+  if (layout && ['hero', 'grid', 'strip', 'mosaic', 'triptych'].includes(layout)) {
     state.layout = layout;
   }
 
@@ -76,8 +77,9 @@ async function boot() {
     return;
   }
 
-  // Normal interactive launch
+  // Normal interactive launch with all keyboard shortcuts and undo/redo support
   initEditor(state, { isShotMode: false });
 }
 
 boot();
+
