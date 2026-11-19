@@ -5,7 +5,7 @@ import { computePanels, hitTestPanel, SIZES } from './layout.js';
 import { renderPoster, exportPosterPng } from './render.js';
 import { PRESETS, nextPreset, randomPreset } from './presets.js';
 import { mulberry32 } from './prng.js';
-import { makeCaption, makeCaptionFor } from './wordbank.js';
+import { makeCaption, makeCaptionFor, describeCaption } from './wordbank.js';
 
 const MAX_PANELS = 5;
 
@@ -311,7 +311,8 @@ export function initEditor(state, options = {}) {
       state.subtitle = cap.tagline;
       syncControlsFromState();
       renderNow();
-      setStatus(`Generated caption: "${cap.headline}" (${cap.mood}).`);
+      const desc = describeCaption(cap, rng);
+      setStatus(`Generated caption: "${cap.headline}" (${cap.mood}). ${desc}`);
     });
   }
 
@@ -326,7 +327,8 @@ export function initEditor(state, options = {}) {
       state.subtitle = cap.tagline;
       syncControlsFromState();
       renderNow();
-      setStatus(`Generated ${mood} caption: "${cap.headline}".`);
+      const desc = describeCaption(cap, rng);
+      setStatus(`Generated ${mood} caption: "${cap.headline}". ${desc}`);
     });
   });
 

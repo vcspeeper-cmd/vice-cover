@@ -6,14 +6,20 @@ export const ADJECTIVES = [
   'SUNBURNT', 'SUNKEN', 'NEON', 'GOLDEN', 'RUSTED',
   'MIDNIGHT', 'BLEACHED', 'VELVET', 'SILENT', 'SOLITARY',
   'DESERT', 'COASTAL', 'BITTER', 'RECKLESS', 'BURNING',
-  'HAZY', 'FADED', 'CHROME', 'SALTED', 'SHADOW'
+  'HAZY', 'FADED', 'CHROME', 'SALTED', 'SHADOW',
+  'SCORCHED', 'DISTANT', 'SWELTERING', 'FEVERED', 'SMOLDERING',
+  'STAINED', 'COPPER', 'GLIMMERING', 'RESTLESS', 'BRINY',
+  'SCARLET', 'CRIMSON', 'TARNISHED', 'FORGOTTEN', 'SHADOWED'
 ];
 
 export const NOUNS = [
   'OUTLAW', 'MIRAGE', 'EXPRESS', 'RUNAWAY', 'HORIZON',
   'BOULEVARD', 'DRIFTER', 'CORONA', 'EMPIRE', 'HAVEN',
   'TEMPEST', 'VERDICT', 'SYNDICATE', 'CORRIDOR', 'PHANTOM',
-  'VALLEY', 'HARBOR', 'HIGHWAY', 'CIRCUIT', 'RECKONING'
+  'VALLEY', 'HARBOR', 'HIGHWAY', 'CIRCUIT', 'RECKONING',
+  'STRAND', 'COVE', 'CROSSING', 'TIDE', 'VALKYRIE',
+  'OUTPOST', 'PASSAGE', 'LAGOON', 'VENOM', 'ASYLUM',
+  'RIVER', 'ISLAND', 'TRAIL', 'CHASM', 'DOCK'
 ];
 
 export const PLACES = [
@@ -21,7 +27,11 @@ export const PLACES = [
   'SOLANA BEACH', 'SAN MATEO', 'COCO BAYOU', 'MIRAMAR DOCKS',
   'AMBER KEY', 'MARINA REACH', 'FLAMINGO HARBOR', 'VERONA ISLES',
   'VISTA HARBOR', 'OCEAN REACH', 'SUNSET REEF', 'LAUREL CANYON',
-  'BAYSHORE STRIP', 'POINT ROYALE', 'STARLIGHT SHORES', 'CYPRESS RUN'
+  'BAYSHORE STRIP', 'POINT ROYALE', 'STARLIGHT SHORES', 'CYPRESS RUN',
+  'MANGROVE SOUND', 'HERON ISLE', 'AZURE COVE', 'CORAL SHORES',
+  'BREEZE POINT', 'TIDEWATER REACH', 'TROPIC STRAND', 'GULF BEND',
+  'SHADOW KEY', 'CEDAR REEF', 'SANDPIPER REACH', 'ROYAL BAYOU',
+  'PALMETTO STRIP', 'SILVER CREEK', 'GOLDEN INLET'
 ];
 
 export const TAGS = [
@@ -44,7 +54,22 @@ export const TAGS = [
   'PAST THE MARINA AFTER DARK',
   'FEVER DREAMS ON COASTAL ROADS',
   'THE SUN GOES DOWN ON SOLITUDE',
-  'SILENT STREETS AND BURNING CHROME'
+  'SILENT STREETS AND BURNING CHROME',
+  'SHADOWS FALL ACROSS THE INLET',
+  'COLD DRINKS AND DANGEROUS HIGHWAYS',
+  'WHERE THE OCEAN MEETS THE GLIMMERING LIGHT',
+  'A SLOW DRIFT THROUGH THE BAYOU',
+  'NEVER TRUST A CALM SEA AT DUSK',
+  'BLOOD AND SALT ON THE PALM FRONDS',
+  'DRIFTING THROUGH A SEA OF GLASS',
+  'NO ONE WALKS AWAY CLEAN IN THIS COUNTY',
+  'THE COASTAL HEAT NEVER SLEEPS',
+  'RETURNING TO THE SHADOWS AT MIDNIGHT',
+  'SUNSET GLEAM OVER VACANT MOTELS',
+  'TIRES SQUEAL IN THE DEAD OF NIGHT',
+  'WHATEVER WENT DOWN STAYS BY THE DOCKS',
+  'A FADED SUNRISE OVER THE REACH',
+  'SEARCHING FOR PARADISE ON AN EMPTY ROAD'
 ];
 
 export const MOOD_DICTIONARY = {
@@ -171,6 +196,61 @@ export function captionIdeas(mood, count = 3, rand = Math.random) {
     }
   }
   return results;
+}
+
+export const LIGHT_DESCRIPTIONS = [
+  'harsh amber glare',
+  'faded pastel glow',
+  'blinding neon haze',
+  'deep violet shadow',
+  'sun-bleached radiance',
+  'low golden light',
+  'flickering sodium hue',
+  'misty crimson dawn'
+];
+
+export const TIME_DESCRIPTIONS = [
+  'high noon',
+  'late afternoon',
+  'dusk',
+  'twilight',
+  'midnight',
+  'the dead of night',
+  'first light',
+  'early morning'
+];
+
+export const WEATHER_DESCRIPTIONS = [
+  'sweltering heat wave',
+  'heavy coastal rain',
+  'thick ocean fog',
+  'dry desert breeze',
+  'muggy tropical air',
+  'sudden thunderstorm',
+  'cooling evening breeze',
+  'still sticky air'
+];
+
+export const STREET_DESCRIPTIONS = [
+  'along a deserted coastal highway',
+  'across neon-soaked boulevards',
+  'down quiet palm-lined alleys',
+  'beside decaying marina docks',
+  'over cracked asphalt bridges',
+  'through sunbaked suburban strips',
+  'near shadowy bayou channels',
+  'along empty beachside promenades'
+];
+
+/** Returns one short sentence describing the poster scene suited for the given caption. */
+export function describeCaption(caption, rand = Math.random) {
+  const rFunc = typeof rand === 'function' ? rand : () => (typeof rand === 'number' ? rand : Math.random());
+  const light = pick(LIGHT_DESCRIPTIONS, rFunc);
+  const time = pick(TIME_DESCRIPTIONS, rFunc);
+  const weather = pick(WEATHER_DESCRIPTIONS, rFunc);
+  const street = pick(STREET_DESCRIPTIONS, rFunc);
+
+  return `Suited for ${time} under a ${light} with ${weather} ${street}.`;
 }
 
 
