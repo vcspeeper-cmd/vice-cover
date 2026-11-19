@@ -2,6 +2,7 @@
 
 export const LAYOUTS = [
   { id: 'hero', label: 'Hero + 2x2' },
+  { id: 'quad', label: 'Quad Hero' },
   { id: 'grid', label: 'Banner + 4' },
   { id: 'strip', label: 'Triple Strip' },
   { id: 'mosaic', label: 'Mosaic 1+5' },
@@ -29,6 +30,21 @@ export function computePanels(layoutId, width, height) {
   const innerY = padTop;
   const innerW = width - padX * 2;
   const innerH = height - padTop - padBottom;
+
+  if (layoutId === 'quad') {
+    // Quad Hero layout: 1 massive hero panel across top 60% with consistent margin, 3 smaller side-by-side panels below
+    const topH = Math.round((innerH - gutter) * 0.60);
+    const botY = innerY + topH + gutter;
+    const botH = innerH - topH - gutter;
+    const colW = Math.round((innerW - gutter * 2) / 3);
+
+    return [
+      { id: 0, x: innerX, y: innerY, w: innerW, h: topH, role: 'hero' },
+      { id: 1, x: innerX, y: botY, w: colW, h: botH, role: 'cell' },
+      { id: 2, x: innerX + colW + gutter, y: botY, w: colW, h: botH, role: 'cell' },
+      { id: 3, x: innerX + (colW + gutter) * 2, y: botY, w: colW, h: botH, role: 'cell' },
+    ];
+  }
 
   if (layoutId === 'triptych') {
     // Three tall equal-width vertical panels with a wide title band at bottom

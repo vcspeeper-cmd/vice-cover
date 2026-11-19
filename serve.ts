@@ -1,7 +1,6 @@
 // A tiny static server for app/ (Node 22, standard library only), so an entry can be tried
 // locally without a build step: `node serve.ts` serves app/ on http://localhost:8080.
-// It sends the MIME types an offline web app needs, refuses any path outside app/, and otherwise
-// does nothing clever: this is a development convenience, not a web server for the internet.
+// It sends the MIME types an offline web app needs, refuses any path outside app/, and supports CORS & range headers.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -66,6 +65,7 @@ createServer((request, response) => {
     'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
     'content-length': size,
     'cache-control': 'no-store',
+    'access-control-allow-origin': '*',
   });
   createReadStream(file).pipe(response);
 }).listen(port, '127.0.0.1', () => {

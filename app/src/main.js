@@ -11,12 +11,12 @@ function applyQueryParams(state, params) {
   if (size && SIZES[size]) state.size = size;
 
   const grade = params.get('grade');
-  if (grade && ['sunset', 'neon', 'noir', 'gold'].includes(grade)) {
+  if (grade && ['sunset', 'neon', 'noir', 'gold', 'vice'].includes(grade)) {
     state.grade = grade;
   }
 
   const layout = params.get('layout');
-  if (layout && ['hero', 'grid', 'strip', 'mosaic', 'triptych'].includes(layout)) {
+  if (layout && ['hero', 'quad', 'grid', 'strip', 'mosaic', 'triptych'].includes(layout)) {
     state.layout = layout;
   }
 

@@ -1,10 +1,10 @@
 // Procedural Canvas 2D set dressing: sunset sky with sun disc & haze bands,
-// seeded city skyline with lit windows, bezier palm-tree silhouettes, film grain, and vignette.
+// seeded multi-layer city skyline with lit windows, bezier palm-tree silhouettes, film grain, and vignette.
 
 import { deriveSeed, mulberry32, randInt, randRange } from './prng.js';
 import { getGradePalette } from './grade.js';
 
-/** Draws the sunset sky backdrop, sun disc with retro horizon slices, and atmospheric haze bands. */
+/** Draws the sunset sky backdrop, glowing sun disc with horizon slices, and atmospheric haze bands. */
 export function drawSkyBackdrop(ctx, width, height, gradeId, seed) {
   const palette = getGradePalette(gradeId);
   const rng = mulberry32(deriveSeed(seed, 101));
@@ -40,14 +40,15 @@ export function drawSkyBackdrop(ctx, width, height, gradeId, seed) {
   }
   ctx.restore();
 
-  // Outer sun halo
-  const halo = ctx.createRadialGradient(sunX, sunY, sunR * 0.25, sunX, sunY, sunR * 2.5);
+  // Outer sun halo & bloom disc
+  const halo = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR * 3.0);
   halo.addColorStop(0, palette.sun[0]);
-  halo.addColorStop(0.45, palette.sun[1]);
-  halo.addColorStop(1, palette.sun[2]);
+  halo.addColorStop(0.35, palette.sun[1]);
+  halo.addColorStop(0.70, palette.sun[2]);
+  halo.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.arc(sunX, sunY, sunR * 2.5, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, sunR * 3.0, 0, Math.PI * 2);
   ctx.fill();
 
   // Crisp glowing sun disc with subtle horizontal horizon cutout bars
@@ -66,19 +67,19 @@ export function drawSkyBackdrop(ctx, width, height, gradeId, seed) {
   // Atmospheric horizontal cuts across lower half of sun
   ctx.fillStyle = palette.sky[2];
   ctx.globalAlpha = 0.35;
-  for (let i = 0; i < 5; i++) {
-    const sliceY = sunY + sunR * (0.18 + i * 0.155);
-    const sliceH = sunR * (0.02 + i * 0.014);
+  for (let i = 0; i < 6; i++) {
+    const sliceY = sunY + sunR * (0.12 + i * 0.14);
+    const sliceH = sunR * (0.018 + i * 0.015);
     ctx.fillRect(sunX - sunR, sliceY, sunR * 2, sliceH);
   }
   ctx.restore();
 
-  // Horizontal coastal haze bands across the sky
+  // Atmospheric haze bands across the sky
   ctx.save();
-  const bandCount = 7;
+  const bandCount = 8;
   for (let i = 0; i < bandCount; i++) {
-    const by = height * (0.14 + (i / bandCount) * 0.72) + randRange(rng, -height * 0.02, height * 0.02);
-    const bh = height * randRange(rng, 0.012, 0.045);
+    const by = height * (0.12 + (i / bandCount) * 0.74) + randRange(rng, -height * 0.015, height * 0.015);
+    const bh = height * randRange(rng, 0.015, 0.048);
     const bandGrad = ctx.createLinearGradient(0, by, 0, by + bh);
     bandGrad.addColorStop(0, 'rgba(255,255,255,0)');
     bandGrad.addColorStop(0.5, palette.haze);
@@ -89,41 +90,52 @@ export function drawSkyBackdrop(ctx, width, height, gradeId, seed) {
   ctx.restore();
 }
 
-/** Draws a seeded coastal skyline silhouette along the bottom with glowing lit windows. */
+/** Draws a seeded multi-layer city skyline along the bottom with glowing lit windows. */
 export function drawCitySkyline(ctx, width, height, gradeId, seed) {
   const palette = getGradePalette(gradeId);
   const rng = mulberry32(deriveSeed(seed, 202));
 
   const baseY = height;
-  const maxTowerH = height * 0.21;
-  const minTowerH = height * 0.075;
+  const maxTowerH = height * 0.22;
+  const minTowerH = height * 0.08;
 
-  // Far hazy skyline layer for atmospheric depth
+  // 1. Far distant skyline layer
   ctx.save();
-  ctx.fillStyle = palette.sky[1];
-  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = palette.sky[0];
+  ctx.globalAlpha = 0.35;
   let fx = -width * 0.02;
   while (fx < width * 1.02) {
-    const bw = width * randRange(rng, 0.03, 0.075);
-    const bh = height * randRange(rng, 0.09, 0.24);
+    const bw = width * randRange(rng, 0.04, 0.08);
+    const bh = height * randRange(rng, 0.12, 0.28);
     ctx.fillRect(fx, baseY - bh, bw + 1, bh);
-    if (rng() > 0.65) {
-      // Spire or penthouse crown
-      const cw = bw * randRange(rng, 0.35, 0.6);
-      const ch = bh * randRange(rng, 0.12, 0.25);
-      ctx.fillRect(fx + (bw - cw) * 0.5, baseY - bh - ch, cw, ch);
-    }
-    fx += bw * randRange(rng, 0.78, 1.02);
+    fx += bw * randRange(rng, 0.75, 1.0);
   }
   ctx.restore();
 
-  // Foreground dark skyline silhouette + seeded illuminated windows
+  // 2. Mid hazy skyline layer
+  ctx.save();
+  ctx.fillStyle = palette.sky[1];
+  ctx.globalAlpha = 0.60;
+  let mx = -width * 0.02;
+  while (mx < width * 1.02) {
+    const bw = width * randRange(rng, 0.03, 0.075);
+    const bh = height * randRange(rng, 0.09, 0.23);
+    ctx.fillRect(mx, baseY - bh, bw + 1, bh);
+    if (rng() > 0.65) {
+      const cw = bw * randRange(rng, 0.35, 0.6);
+      const ch = bh * randRange(rng, 0.12, 0.25);
+      ctx.fillRect(mx + (bw - cw) * 0.5, baseY - bh - ch, cw, ch);
+    }
+    mx += bw * randRange(rng, 0.78, 1.02);
+  }
+  ctx.restore();
+
+  // 3. Foreground dark skyline silhouette + seeded illuminated windows
   ctx.save();
   const buildings = [];
   let x = -width * 0.015;
   while (x < width * 1.015) {
     const bw = Math.round(width * randRange(rng, 0.032, 0.082));
-    // Taller towers toward the flanks so the center remains open for the caption
     const edgeFactor = Math.abs((x + bw * 0.5) / width - 0.5) * 2;
     const hScale = 0.68 + edgeFactor * 0.45;
     const bh = Math.round(randRange(rng, minTowerH, maxTowerH) * hScale);
@@ -137,15 +149,12 @@ export function drawCitySkyline(ctx, width, height, gradeId, seed) {
     const topY = baseY - b.h;
     ctx.fillRect(b.x, topY, b.w + 1, b.h + 2);
     if (b.roofStyle === 1) {
-      // Art Deco stepped crown
       const sw = Math.round(b.w * 0.56);
       const sh = Math.round(b.h * 0.14);
       ctx.fillRect(b.x + Math.round((b.w - sw) / 2), topY - sh, sw, sh + 1);
-      // Thin antenna spire
       const aw = Math.max(2, Math.round(width * 0.002));
       ctx.fillRect(b.x + Math.round(b.w / 2 - aw / 2), topY - sh - Math.round(sh * 1.1), aw, Math.round(sh * 1.1));
     } else if (b.roofStyle === 2) {
-      // Slanted modern tower roof
       ctx.beginPath();
       ctx.moveTo(b.x, topY);
       ctx.lineTo(b.x + b.w, topY - Math.round(b.w * 0.25));
@@ -181,8 +190,8 @@ export function drawCitySkyline(ctx, width, height, gradeId, seed) {
     }
   }
 
-  // Thin atmospheric horizon glow hugging the skyline base
-  const glowH = height * 0.06;
+  // Horizon glow hugging skyline base
+  const glowH = height * 0.07;
   const glow = ctx.createLinearGradient(0, baseY - glowH, 0, baseY);
   glow.addColorStop(0, 'rgba(0,0,0,0)');
   glow.addColorStop(1, palette.silhouette);
@@ -199,7 +208,6 @@ function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thicknes
   const cx = ox + Math.cos(angle) * length * 0.52;
   const cy = oy + Math.sin(angle) * length * 0.45 - Math.abs(droop) * 0.25;
 
-  // Frond central spine
   ctx.beginPath();
   ctx.moveTo(ox, oy);
   ctx.quadraticCurveTo(cx, cy, ex, ey);
@@ -207,7 +215,6 @@ function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thicknes
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  // Feathered blade leaflets hanging from spine
   const sideSign = Math.cos(angle) >= 0 ? 1 : -1;
   for (let i = 2; i <= leafletCount; i++) {
     const t = i / (leafletCount + 1);
@@ -215,12 +222,10 @@ function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thicknes
     const px = mt * mt * ox + 2 * mt * t * cx + t * t * ex;
     const py = mt * mt * oy + 2 * mt * t * cy + t * t * ey;
 
-    // Tangent vector
     const tx = 2 * mt * (cx - ox) + 2 * t * (ex - cx);
     const ty = 2 * mt * (cy - oy) + 2 * t * (ey - cy);
     const tanAngle = Math.atan2(ty, tx);
 
-    // Taper leaflets toward tip and base
     const env = Math.sin(t * Math.PI);
     const bladeLen = length * 0.24 * (0.35 + env * 0.85);
     const bladeAngle = tanAngle + sideSign * (0.55 + t * 0.35);
@@ -252,7 +257,6 @@ function drawPalmTree(ctx, baseX, baseY, height, lean, scale, rng, color) {
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
 
-  // Tapered curved trunk built from left/right offset bezier curves
   ctx.beginPath();
   ctx.moveTo(baseX - baseHalfW, baseY + 6);
   ctx.quadraticCurveTo(ctrlX - (baseHalfW + tipHalfW) * 0.45, ctrlY, tipX - tipHalfW, tipY);
@@ -261,7 +265,6 @@ function drawPalmTree(ctx, baseX, baseY, height, lean, scale, rng, color) {
   ctx.closePath();
   ctx.fill();
 
-  // Small cluster of coconuts at crown
   const nutR = Math.max(2, tipHalfW * 1.15);
   for (let c = -1; c <= 1; c++) {
     ctx.beginPath();
@@ -269,11 +272,9 @@ function drawPalmTree(ctx, baseX, baseY, height, lean, scale, rng, color) {
     ctx.fill();
   }
 
-  // Radial fan of 8 to 10 fronds
   const frondCount = randInt(rng, 8, 10);
   for (let i = 0; i < frondCount; i++) {
     const frac = i / (frondCount - 1);
-    // Spread from far left (-195 deg) over top to far right (+15 deg)
     const angle = (-Math.PI * 1.08) + frac * (Math.PI * 1.16) + randRange(rng, -0.09, 0.09);
     const frondLen = height * randRange(rng, 0.30, 0.46);
     const droop = frondLen * randRange(rng, 0.18, 0.42);
@@ -285,34 +286,38 @@ function drawPalmTree(ctx, baseX, baseY, height, lean, scale, rng, color) {
   ctx.restore();
 }
 
-/** Draws a silhouette row of Vice City palm trees framing the bottom edges and skyline. */
+/** Draws palm tree silhouettes at two scales framing the poster flanks and skyline. */
 export function drawPalmRow(ctx, width, height, gradeId, seed) {
   const palette = getGradePalette(gradeId);
   const rng = mulberry32(deriveSeed(seed, 303));
   const unit = Math.min(width, height);
 
-  // Anchor hero framing palms on left & right flanks plus smaller mid-distance palms along the foot
-  const trees = [
-    // Tall left flank palms leaning gently inward
+  // Background smaller scale palms
+  const bgTrees = [
+    { x: width * randRange(rng, 0.12, 0.18), h: unit * randRange(rng, 0.22, 0.28), lean: width * randRange(rng, 0.02, 0.05), s: 0.75 },
+    { x: width * randRange(rng, 0.80, 0.86), h: unit * randRange(rng, 0.22, 0.28), lean: width * randRange(rng, -0.05, -0.02), s: 0.75 },
+  ];
+
+  for (const t of bgTrees) {
+    drawPalmTree(ctx, t.x, height + 4, t.h, t.lean, t.s, rng, palette.silhouette);
+  }
+
+  // Foreground larger scale framing palms
+  const fgTrees = [
     { x: width * randRange(rng, 0.015, 0.05), h: unit * randRange(rng, 0.44, 0.54), lean: width * randRange(rng, 0.05, 0.10), s: 1.05 },
-    { x: width * randRange(rng, 0.09, 0.15), h: unit * randRange(rng, 0.28, 0.37), lean: width * randRange(rng, -0.02, 0.06), s: 0.9 },
-    // Subtle lower mid-left and mid-right silhouettes
-    { x: width * randRange(rng, 0.21, 0.28), h: unit * randRange(rng, 0.16, 0.22), lean: width * randRange(rng, -0.03, 0.03), s: 0.8 },
-    { x: width * randRange(rng, 0.72, 0.79), h: unit * randRange(rng, 0.16, 0.23), lean: width * randRange(rng, -0.03, 0.03), s: 0.8 },
-    // Tall right flank palms leaning inward
-    { x: width * randRange(rng, 0.85, 0.91), h: unit * randRange(rng, 0.29, 0.38), lean: width * randRange(rng, -0.06, 0.02), s: 0.92 },
+    { x: width * randRange(rng, 0.08, 0.13), h: unit * randRange(rng, 0.30, 0.38), lean: width * randRange(rng, -0.02, 0.04), s: 0.9 },
+    { x: width * randRange(rng, 0.86, 0.92), h: unit * randRange(rng, 0.30, 0.38), lean: width * randRange(rng, -0.04, 0.02), s: 0.9 },
     { x: width * randRange(rng, 0.945, 0.985), h: unit * randRange(rng, 0.45, 0.55), lean: width * randRange(rng, -0.10, -0.05), s: 1.05 },
   ];
 
-  // Add 2 extra seeded mid-horizon palms for wider posters
   if (width / height > 1.25) {
-    trees.push(
+    fgTrees.push(
       { x: width * randRange(rng, 0.33, 0.41), h: unit * randRange(rng, 0.14, 0.19), lean: width * randRange(rng, -0.02, 0.03), s: 0.78 },
       { x: width * randRange(rng, 0.59, 0.67), h: unit * randRange(rng, 0.14, 0.19), lean: width * randRange(rng, -0.03, 0.02), s: 0.78 },
     );
   }
 
-  for (const t of trees) {
+  for (const t of fgTrees) {
     drawPalmTree(ctx, t.x, height + 4, t.h, t.lean, t.s, rng, palette.silhouette);
   }
 }
@@ -329,7 +334,6 @@ export function drawFilmGrain(ctx, width, height, seed, intensity = 0.042) {
   const rng = mulberry32(deriveSeed(seed, 404));
 
   for (let i = 0; i < data.length; i += 4) {
-    // Subtle organic film grain (centered around 128)
     const v = Math.floor(100 + ((rng() + rng()) * 0.5) * 56);
     data[i] = v;
     data[i + 1] = v;
@@ -347,7 +351,7 @@ export function drawFilmGrain(ctx, width, height, seed, intensity = 0.042) {
   ctx.restore();
 }
 
-/** Draws a subtle dark cinematic vignette around the poster edges. */
+/** Draws a subtle dark cinematic vignette around poster edges. */
 export function drawVignette(ctx, width, height) {
   const cx = width * 0.5;
   const cy = height * 0.48;

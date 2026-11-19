@@ -1,5 +1,5 @@
 // Master deterministic poster renderer: composes cream frame, sky backdrop, multi-panel photos,
-// per-pixel colour grade, skyline, palms, grain, vignette, and custom-drawn lettering.
+// per-pixel colour grade, skyline, palms, grain, vignette, headline backing plate, and custom-drawn lettering.
 
 import { computePanels } from './layout.js';
 import { applyColorGrade, getGradePalette } from './grade.js';
@@ -53,7 +53,7 @@ function drawPanelPhoto(ctx, rect, slot, gradePalette) {
   ctx.restore();
 }
 
-/** Draws the printed-poster 2-4 px dark ink border and hairline light inner edge on each panel. */
+/** Draws the printed-poster 2-4 px dark ink border and hairline light inner edge on each panel with clean guttering. */
 function drawPanelFrame(ctx, rect, unit, isSelected) {
   const inkW = Math.max(2, Math.min(4, Math.round(unit * 0.0032)));
 
@@ -86,6 +86,22 @@ function drawPanelFrame(ctx, rect, unit, isSelected) {
     ctx.setLineDash([Math.max(8, unit * 0.012), Math.max(5, unit * 0.008)]);
     ctx.strokeRect(rect.x - 3, rect.y - 3, rect.w + 6, rect.h + 6);
   }
+  ctx.restore();
+}
+
+/** Draws a headline backing plate behind lower text block for contrast & separation. */
+function drawHeadlinePlate(ctx, width, height) {
+  ctx.save();
+  const plateH = height * 0.35;
+  const plateY = height - plateH;
+  const plateGrad = ctx.createLinearGradient(0, plateY, 0, height);
+  plateGrad.addColorStop(0, 'rgba(6, 2, 12, 0)');
+  plateGrad.addColorStop(0.3, 'rgba(8, 3, 16, 0.45)');
+  plateGrad.addColorStop(0.7, 'rgba(10, 4, 18, 0.72)');
+  plateGrad.addColorStop(1.0, 'rgba(12, 5, 20, 0.88)');
+
+  ctx.fillStyle = plateGrad;
+  ctx.fillRect(0, plateY, width, plateH);
   ctx.restore();
 }
 
@@ -136,14 +152,17 @@ export function renderPoster(canvas, state, options = {}) {
   // 8. Palm-tree silhouette row
   drawPalmRow(ctx, width, height, state.grade, state.seed);
 
-  // 9. Film grain & vignette
-  drawFilmGrain(ctx, width, height, state.seed, 0.032);
+  // 9. Light film grain & vignette
+  drawFilmGrain(ctx, width, height, state.seed, 0.028);
   drawVignette(ctx, width, height);
 
-  // 10. Custom-drawn GTA-style caption + subtitle
+  // 10. Stronger dark headline plate for legibility
+  drawHeadlinePlate(ctx, width, height);
+
+  // 11. Custom-drawn GTA-style caption + subtitle
   drawCaption(ctx, width, height, state.caption, state.subtitle, state.lettering, state.grade);
 
-  // 11. Optional editor selection indicator
+  // 12. Optional editor selection indicator
   if (showSelection && state.selectedPanel >= 0 && state.selectedPanel < panels.length) {
     const sel = panels[state.selectedPanel];
     ctx.save();

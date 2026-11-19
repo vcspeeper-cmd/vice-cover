@@ -405,7 +405,7 @@ export function initEditor(state, options = {}) {
         await new Promise((r) => requestAnimationFrame(r));
         const res = await exportPosterPng(state, w, h, filename);
         const kb = Math.round(res.bytes / 1024);
-        setStatus(`Exported ${res.filename} (${w}x${h}, ${kb} KB).`);
+        setStatus(`Exported ${res.filename} (${w}x${h}, ${kb} KB) — ready for cover.`);
       } catch {
         setStatus('Export failed.');
       } finally {

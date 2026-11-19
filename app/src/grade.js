@@ -49,6 +49,18 @@ export const GRADES = [
     fringeA: 'rgba(255, 175, 20, 0.72)',
     fringeB: 'rgba(255, 65, 95, 0.55)',
   },
+  {
+    id: 'vice',
+    label: 'Vice Hotline',
+    swatch: 'linear-gradient(135deg, #ff55bb, #38f2ff)',
+    sky: ['#1f0226', '#66085a', '#b80c7a', '#ff42a1', '#38f2ff'],
+    sun: ['#ffffff', '#ff66d4', 'rgba(56, 242, 255, 0)'],
+    haze: 'rgba(255, 128, 220, 0.25)',
+    silhouette: '#12021a',
+    windowColors: ['#38f2ff', '#ff66d4', '#ffff80', '#99ffaa'],
+    fringeA: 'rgba(255, 0, 128, 0.85)',
+    fringeB: 'rgba(0, 242, 255, 0.85)',
+  },
 ];
 
 const GRADE_MAP = Object.fromEntries(GRADES.map((g) => [g.id, g]));
@@ -68,7 +80,6 @@ function overlayChannel(base, blend) {
 }
 
 function softContrast(x, amount) {
-  // Smooth S-curve around 0.5 for punchy graphic-novel tonal separation.
   const centered = x - 0.5;
   const curved = centered + amount * centered * (1 - 4 * centered * centered);
   return curved + 0.5;
@@ -84,13 +95,11 @@ export function applyColorGrade(ctx, width, height, gradeId) {
   const data = img.data;
   const invH = height > 1 ? 1 / (height - 1) : 0;
 
-  // Grade colour matrices (normalized 0..1)
   let topR, topG, topB, botR, botG, botB;
   let shR, shG, shB, hiR, hiG, hiB;
   let satBoost, contrastAmt, overlayMix, multMix;
 
   if (gradeId === 'neon') {
-    // Cyan top -> electric magenta bottom, deep indigo shadows, crisp highlights
     topR = 0.08; topG = 0.90; topB = 1.00;
     botR = 1.00; botG = 0.14; botB = 0.76;
     shR = 0.06; shG = 0.08; shB = 0.28;
@@ -100,7 +109,6 @@ export function applyColorGrade(ctx, width, height, gradeId) {
     overlayMix = 0.42;
     multMix = 0.22;
   } else if (gradeId === 'noir') {
-    // Cool desaturated steel-blue mood with crisp silver highlights and ink blacks
     topR = 0.34; topG = 0.50; topB = 0.70;
     botR = 0.16; botG = 0.27; botB = 0.42;
     shR = 0.05; shG = 0.10; shB = 0.18;
@@ -110,7 +118,6 @@ export function applyColorGrade(ctx, width, height, gradeId) {
     overlayMix = 0.36;
     multMix = 0.26;
   } else if (gradeId === 'gold') {
-    // Warm sunlit amber/bronze across shadows and highlights
     topR = 1.00; topG = 0.80; topB = 0.34;
     botR = 0.86; botG = 0.38; botB = 0.08;
     shR = 0.18; shG = 0.09; shB = 0.03;
@@ -119,8 +126,16 @@ export function applyColorGrade(ctx, width, height, gradeId) {
     contrastAmt = 0.38;
     overlayMix = 0.40;
     multMix = 0.24;
+  } else if (gradeId === 'vice') {
+    topR = 0.95; topG = 0.10; topB = 0.65;
+    botR = 0.10; botG = 0.85; botB = 0.95;
+    shR = 0.12; shG = 0.02; shB = 0.20;
+    hiR = 0.95; hiG = 0.95; hiB = 1.00;
+    satBoost = 1.40;
+    contrastAmt = 0.45;
+    overlayMix = 0.44;
+    multMix = 0.25;
   } else {
-    // 'sunset': vibrant Vice orange/coral top fading to hot magenta-violet bottom
     topR = 1.00; topG = 0.58; topB = 0.22;
     botR = 0.94; botG = 0.16; botB = 0.58;
     shR = 0.18; shG = 0.05; shB = 0.24;
@@ -143,23 +158,19 @@ export function applyColorGrade(ctx, width, height, gradeId) {
       let g = data[idx + 1] / 255;
       let b = data[idx + 2] / 255;
 
-      // 1. Graphic-novel contrast S-curve
       r = softContrast(r, contrastAmt);
       g = softContrast(g, contrastAmt);
       b = softContrast(b, contrastAmt);
 
-      // 2. Luminance & saturation shaping
       const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       r = lum + (r - lum) * satBoost;
       g = lum + (g - lum) * satBoost;
       b = lum + (b - lum) * satBoost;
 
-      // Clamp intermediate before blend maths
       r = r < 0 ? 0 : r > 1 ? 1 : r;
       g = g < 0 ? 0 : g > 1 ? 1 : g;
       b = b < 0 ? 0 : b > 1 ? 1 : b;
 
-      // 3. Multiply + Overlay blend with vertical grade colour
       const or = overlayChannel(r, gr);
       const og = overlayChannel(g, gg);
       const ob = overlayChannel(b, gb);
@@ -173,7 +184,6 @@ export function applyColorGrade(ctx, width, height, gradeId) {
       g = g * baseMix + og * overlayMix + mg * multMix;
       b = b * baseMix + ob * overlayMix + mb * multMix;
 
-      // 4. Split-tone shadows and highlights
       const shadowW = (1 - lum) * (1 - lum) * 0.28;
       const highW = lum * lum * 0.16;
       r = r * (1 - shadowW) + shR * shadowW + (hiR - 0.5) * highW;

@@ -1,7 +1,7 @@
 [
   {
     "name": "1-cover.jpg",
-    "query": "?shot=cover&size=tall&grade=sunset&layout=hero&lettering=block&caption=MIDNIGHT%20IN%20LEONIDA&subtitle=SOUTH%20BEACH%20EDITION&seed=1986",
+    "query": "?shot=cover&size=tall&grade=sunset&layout=mosaic&lettering=block&caption=MIDNIGHT%20IN%20LEONIDA&subtitle=SOUTH%20BEACH%20EDITION&seed=1986",
     "w": 1024,
     "h": 1280
   },
@@ -19,7 +19,7 @@
   },
   {
     "name": "4-cover-square.jpg",
-    "query": "?shot=cover&size=square&grade=gold&layout=strip&lettering=chrome&caption=GOLDEN%20GETAWAY&subtitle=OCEAN%20DRIVE%20HEIST&seed=7777",
+    "query": "?shot=cover&size=square&grade=gold&layout=triptych&lettering=chrome&caption=GOLDEN%20GETAWAY&subtitle=OCEAN%20DRIVE%20HEIST&seed=7777",
     "w": 1024,
     "h": 1024
   }

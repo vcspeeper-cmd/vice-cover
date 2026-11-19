@@ -28,3 +28,9 @@ export function randRange(rng, min, max) {
 export function randInt(rng, min, max) {
   return Math.floor(min + rng() * (max - min + 1));
 }
+
+/** Randomly pick an item from an array using rng. */
+export function randPick(rng, arr) {
+  if (!arr || arr.length === 0) return null;
+  return arr[randInt(rng, 0, arr.length - 1)];
+}

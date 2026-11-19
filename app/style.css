@@ -1,14 +1,16 @@
 :root {
-  --bg: #0c0a14;
-  --panel: #141122;
-  --panel-elev: #1d1830;
-  --border: #2c2547;
-  --border-hi: #483d73;
+  --bg: #0b0914;
+  --panel: #131021;
+  --panel-elev: #1c172e;
+  --panel-rail: #0e0b1a;
+  --border: #292244;
+  --border-hi: #44396b;
   --text: #f3effa;
-  --muted: #9f96ba;
+  --muted: #9c92b8;
   --accent-pink: #ff2e93;
   --accent-orange: #ff7b3b;
   --accent-cyan: #38f2ff;
+  --accent-gold: #ffd147;
   --radius: 8px;
 }
 
@@ -23,7 +25,7 @@ html, body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.35 system-ui, -apple-system, "Liberation Sans", sans-serif;
+  font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -38,23 +40,24 @@ html, body {
   height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar Dark Studio Shell */
 .sidebar {
   grid-area: sidebar;
-  background: linear-gradient(180deg, #161226 0%, #100d1c 100%);
+  background: linear-gradient(180deg, #151126 0%, #0d0a1a 100%);
   border-right: 1px solid var(--border);
-  padding: 14px 14px 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 12px;
   overflow-y: auto;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -93,6 +96,10 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  background: rgba(20, 16, 34, 0.5);
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(41, 34, 68, 0.4);
 }
 
 .group-head {
@@ -137,7 +144,7 @@ html, body {
   padding: 7px 9px;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: #0d0a17;
+  background: #0c0916;
   color: var(--text);
   font: 700 13px/1.2 system-ui, sans-serif;
   letter-spacing: 0.03em;
@@ -180,7 +187,7 @@ html, body {
   background: linear-gradient(135deg, rgba(255, 123, 59, 0.24), rgba(255, 46, 147, 0.32));
   border-color: var(--accent-pink);
   color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .grade-grid {
@@ -225,6 +232,7 @@ html, body {
 .swatch-neon   { background: linear-gradient(135deg, #00e5ff, #ff1ead); }
 .swatch-noir   { background: linear-gradient(135deg, #1b283b, #7ba4cc); }
 .swatch-gold   { background: linear-gradient(135deg, #ffd147, #a8420c); }
+.swatch-vice   { background: linear-gradient(135deg, #ff55bb, #38f2ff); }
 
 .btn-row {
   display: grid;
@@ -289,6 +297,9 @@ html, body {
 
 input[type="range"] {
   width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #090712;
   accent-color: var(--accent-pink);
   cursor: pointer;
   margin: 0;
@@ -331,8 +342,8 @@ input[type="range"] {
   display: block;
   border-radius: 3px;
   box-shadow:
-    0 18px 50px rgba(0, 0, 0, 0.72),
-    0 0 0 1px rgba(255, 255, 255, 0.12);
+    0 22px 60px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.14);
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -342,7 +353,7 @@ input[type="range"] {
   cursor: grabbing;
 }
 
-/* Thin footer export bar */
+/* Thin footer status bar */
 .footer {
   grid-area: footer;
   display: flex;
@@ -350,7 +361,7 @@ input[type="range"] {
   justify-content: space-between;
   gap: 16px;
   padding: 0 18px;
-  background: #120f1e;
+  background: #100d1b;
   border-top: 1px solid var(--border);
 }
 
@@ -399,6 +410,7 @@ input[type="range"] {
   background: linear-gradient(135deg, #ff7038, #e6268c);
   border-color: rgba(255, 255, 255, 0.22);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(230, 38, 140, 0.35);
 }
 
 .export-btn:disabled {

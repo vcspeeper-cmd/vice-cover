@@ -1,6 +1,6 @@
 // Captures the 4 competition screenshots of Vice Cover by serving app/ locally on 127.0.0.1:8137
-// and driving headless Chromium via Playwright. Fails loudly if any file exceeds 262144 bytes.
-// Generates a contact sheet showing the custom-drawn vector lettering, mosaic layout, and colour grading diversity.
+// and driving headless Chromium via Playwright. Fails loudly if any file exceeds 262144 bytes,
+// or if pixel dimensions breach the [480, 1280] boundaries.
 
 import { createReadStream, mkdirSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -15,6 +15,8 @@ const CHROME_PATH = '/root/.cache/ms-playwright/chromium-1248/chrome-linux64/chr
 const HOST = '127.0.0.1';
 const PORT = 8137;
 const MAX_BYTES = 262144;
+const MAX_LONG_SIDE = 1280;
+const MIN_SHORT_SIDE = 480;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -109,6 +111,15 @@ async function main() {
     });
 
     for (const scene of SCENES) {
+      const longSide = Math.max(scene.width, scene.height);
+      const shortSide = Math.min(scene.width, scene.height);
+      if (longSide > MAX_LONG_SIDE) {
+        throw new Error(`${scene.file} long side ${longSide}px exceeds max ${MAX_LONG_SIDE}px`);
+      }
+      if (shortSide < MIN_SHORT_SIDE) {
+        throw new Error(`${scene.file} short side ${shortSide}px is below min ${MIN_SHORT_SIDE}px`);
+      }
+
       await page.setViewportSize({ width: scene.width, height: scene.height });
       const targetUrl = `http://${HOST}:${PORT}/${scene.query}`;
       await page.goto(targetUrl, { waitUntil: 'networkidle' });

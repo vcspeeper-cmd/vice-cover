@@ -2,14 +2,8 @@
 // Validates app/ and screenshots/ against the competition caps, copies them into the output directory,
 // and writes dossier.json using the vendored make.fun library.
 //
-// Premium poster editor with custom-drawn vector lettering, five layout modes (hero, grid, strip, mosaic, triptych),
-// four colour grades (sunset, neon, noir, gold), keyboard shortcuts, undo/redo, and deterministic scene generation.
-//
-// Check the workspace without writing anything:
-//   node main.ts --check
-// Serve locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Premium poster editor with custom-drawn vector lettering, multiple layout modes,
+// colour grades, keyboard shortcuts, undo/redo, and preflight size validation.
 
 import { cpSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -138,7 +132,7 @@ function validateEntry(root: string): PreflightReport {
       screenshots++;
       if (st.size > CAPS.screenshots.max_bytes) {
         problems.push(
-          `screenshots/${entry.name}: ${st.size} bytes exceeds limit of ${CAPS.screenshots.max_bytes}`,
+          `FATAL: screenshots/${entry.name}: ${st.size} bytes exceeds limit of ${CAPS.screenshots.max_bytes}`,
         );
       }
     }
@@ -169,7 +163,7 @@ if (checkOnly) {
 }
 
 if (report.problems.length > 0) {
-  console.error('preflight failed; refusing to write output:');
+  console.error('preflight failed loudly; refusing to write output:');
   for (const problem of report.problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
