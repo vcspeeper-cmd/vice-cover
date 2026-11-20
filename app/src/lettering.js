@@ -1173,7 +1173,7 @@ export function drawPosterFurniture(ctx, width, height, state, palette) {
     const plateH = fontPx + padY * 2;
     let px = rect.x + rect.w / 2 - plateW / 2;
     px = Math.max(margin * 0.5, Math.min(width - margin * 0.5 - plateW, px));
-    const py = rect.y + rect.h + labelGap;
+    const py = rect.y + labelGap;
 
     ctx.fillStyle = ink;
     ctx.fillRect(px, py, plateW, plateH);
