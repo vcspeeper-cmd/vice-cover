@@ -4,7 +4,7 @@
 import { computePanels } from './layout.js';
 import { applyColorGrade, getGradePalette } from './grade.js';
 import { drawSkyBackdrop, drawCitySkyline, drawPalmRow, drawFilmGrain, drawVignette } from './scene.js';
-import { drawCaption } from './lettering.js';
+import { drawCaption, drawPosterFurniture } from './lettering.js';
 
 /**
  * Draws a single photo clipped into a panel rectangle with cover scaling and per-panel pan/zoom.
@@ -161,6 +161,9 @@ export function renderPoster(canvas, state, options = {}) {
 
   // 11. Custom-drawn GTA-style caption + subtitle
   drawCaption(ctx, width, height, state.caption, state.subtitle, state.lettering, state.grade);
+
+  // 11b. Printed-poster furniture: stars, panel labels, volume tag, barcode, credits
+  drawPosterFurniture(ctx, width, height, state, gradePalette);
 
   // 12. Optional editor selection indicator
   if (showSelection && state.selectedPanel >= 0 && state.selectedPanel < panels.length) {

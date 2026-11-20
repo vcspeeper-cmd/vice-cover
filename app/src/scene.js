@@ -135,32 +135,59 @@ export function drawCitySkyline(ctx, width, height, gradeId, seed) {
   const buildings = [];
   let x = -width * 0.015;
   while (x < width * 1.015) {
-    const bw = Math.round(width * randRange(rng, 0.032, 0.082));
+    const bw = Math.round(width * randRange(rng, 0.024, 0.092));
     const edgeFactor = Math.abs((x + bw * 0.5) / width - 0.5) * 2;
-    const hScale = 0.68 + edgeFactor * 0.45;
+    const hScale = 0.6 + edgeFactor * 0.55;
     const bh = Math.round(randRange(rng, minTowerH, maxTowerH) * hScale);
-    const roofStyle = randInt(rng, 0, 3);
-    buildings.push({ x: Math.round(x), w: bw, h: bh, roofStyle });
-    x += bw * randRange(rng, 0.86, 1.03);
+    const roofStyle = randInt(rng, 0, 4);
+    // 1-2 stepped setbacks for taller foreground towers
+    const setbacks = [];
+    if (bh > height * 0.13 && rng() > 0.45) {
+      const steps = randInt(rng, 1, 2);
+      let curW = bw;
+      let curY = baseY - bh;
+      for (let s = 0; s < steps; s++) {
+        const sw = Math.round(curW * randRange(rng, 0.52, 0.78));
+        const sh = Math.round(bh * randRange(rng, 0.08, 0.17));
+        if (sw < 4 || sh < 3) break;
+        curY -= sh;
+        setbacks.push({ x: Math.round(x + (bw - sw) / 2), y: curY, w: sw, h: sh });
+        curW = sw;
+      }
+    }
+    buildings.push({ x: Math.round(x), w: bw, h: bh, roofStyle, setbacks });
+    x += bw * randRange(rng, 0.9, 1.04);
   }
 
   ctx.fillStyle = palette.silhouette;
   for (const b of buildings) {
     const topY = baseY - b.h;
     ctx.fillRect(b.x, topY, b.w + 1, b.h + 2);
+    for (const st of b.setbacks) {
+      ctx.fillRect(st.x, st.y, st.w, st.h + 1);
+    }
     if (b.roofStyle === 1) {
-      const sw = Math.round(b.w * 0.56);
-      const sh = Math.round(b.h * 0.14);
-      ctx.fillRect(b.x + Math.round((b.w - sw) / 2), topY - sh, sw, sh + 1);
+      const sw = Math.round(b.w * 0.46);
+      const sh = Math.round(b.h * 0.1);
+      const spikeBaseY = b.setbacks.length ? b.setbacks[b.setbacks.length - 1].y : topY;
+      ctx.fillRect(b.x + Math.round((b.w - sw) / 2), spikeBaseY - sh, sw, sh + 1);
       const aw = Math.max(2, Math.round(width * 0.002));
-      ctx.fillRect(b.x + Math.round(b.w / 2 - aw / 2), topY - sh - Math.round(sh * 1.1), aw, Math.round(sh * 1.1));
+      ctx.fillRect(b.x + Math.round(b.w / 2 - aw / 2), spikeBaseY - sh - Math.round(sh * 1.2), aw, Math.round(sh * 1.2));
     } else if (b.roofStyle === 2) {
+      const slantBaseY = b.setbacks.length ? b.setbacks[b.setbacks.length - 1].y : topY;
       ctx.beginPath();
-      ctx.moveTo(b.x, topY);
-      ctx.lineTo(b.x + b.w, topY - Math.round(b.w * 0.25));
-      ctx.lineTo(b.x + b.w, topY + 2);
+      ctx.moveTo(b.x, slantBaseY);
+      ctx.lineTo(b.x + b.w, slantBaseY - Math.round(b.w * 0.22));
+      ctx.lineTo(b.x + b.w, slantBaseY + 2);
       ctx.closePath();
       ctx.fill();
+    } else if (b.roofStyle === 3) {
+      // rooftop water tank / plant housing
+      const tw = Math.round(b.w * 0.22);
+      const th = Math.round(b.h * 0.08);
+      const tankBaseY = b.setbacks.length ? b.setbacks[b.setbacks.length - 1].y : topY;
+      ctx.fillRect(b.x + Math.round(b.w * 0.18), tankBaseY - th, tw, th + 1);
+      ctx.fillRect(b.x + Math.round(b.w * 0.62), tankBaseY - Math.round(th * 0.6), Math.round(tw * 0.7), Math.round(th * 0.6) + 1);
     }
   }
 
@@ -172,22 +199,28 @@ export function drawCitySkyline(ctx, width, height, gradeId, seed) {
 
   for (const b of buildings) {
     const topY = baseY - b.h + Math.round(gapY * 0.9);
-    const leftX = b.x + Math.round(gapX * 0.6);
-    const rightX = b.x + b.w - Math.round(gapX * 0.6) - winW;
     const density = randRange(rng, 0.16, 0.42);
     const isBandStyle = rng() > 0.72;
+    const bodies = [{ x: b.x, w: b.w, top: topY }].concat(
+      b.setbacks.map((st) => ({ x: st.x, w: st.w, top: st.y + gapY * 0.6 }))
+    );
 
-    for (let wy = topY; wy < baseY - gapY * 0.8; wy += gapY) {
-      const floorLit = rng() < density;
-      for (let wx = leftX; wx <= rightX; wx += gapX) {
-        const lit = isBandStyle ? (floorLit && rng() < 0.75) : (rng() < density);
-        if (!lit) continue;
-        const color = palette.windowColors[randInt(rng, 0, palette.windowColors.length - 1)];
-        ctx.fillStyle = color;
-        ctx.globalAlpha = randRange(rng, 0.45, 0.95);
-        ctx.fillRect(wx, wy, winW, winH);
+    for (const body of bodies) {
+      const bx0 = body.x + Math.round(gapX * 0.55);
+      const bx1 = body.x + body.w - Math.round(gapX * 0.55) - winW;
+      for (let wy = body.top; wy < baseY - gapY * 0.8; wy += gapY) {
+        const floorLit = rng() < density;
+        for (let wx = bx0; wx <= bx1; wx += gapX) {
+          const lit = isBandStyle ? (floorLit && rng() < 0.75) : (rng() < density);
+          if (!lit) continue;
+          const color = palette.windowColors[randInt(rng, 0, palette.windowColors.length - 1)];
+          ctx.fillStyle = color;
+          ctx.globalAlpha = randRange(rng, 0.45, 0.95);
+          ctx.fillRect(wx, wy, winW, winH);
+        }
       }
     }
+    void topY;
   }
 
   // Horizon glow hugging skyline base
@@ -202,11 +235,17 @@ export function drawCitySkyline(ctx, width, height, gradeId, seed) {
 }
 
 /** Draws a single palm frond with drooping feathered leaflets along a quadratic spine. */
-function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thickness) {
+function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thickness, fillColor, sideSign) {
+  const dir = sideSign ?? (Math.cos(angle) >= 0 ? 1 : -1);
   const ex = ox + Math.cos(angle) * length;
   const ey = oy + Math.sin(angle) * length + droop;
   const cx = ox + Math.cos(angle) * length * 0.52;
   const cy = oy + Math.sin(angle) * length * 0.45 - Math.abs(droop) * 0.25;
+
+  if (fillColor) {
+    ctx.fillStyle = fillColor;
+    ctx.strokeStyle = fillColor;
+  }
 
   ctx.beginPath();
   ctx.moveTo(ox, oy);
@@ -215,8 +254,7 @@ function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thicknes
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  const sideSign = Math.cos(angle) >= 0 ? 1 : -1;
-  for (let i = 2; i <= leafletCount; i++) {
+  for (let i = 1; i <= leafletCount; i++) {
     const t = i / (leafletCount + 1);
     const mt = 1 - t;
     const px = mt * mt * ox + 2 * mt * t * cx + t * t * ex;
@@ -227,60 +265,99 @@ function drawPalmFrond(ctx, ox, oy, angle, length, droop, leafletCount, thicknes
     const tanAngle = Math.atan2(ty, tx);
 
     const env = Math.sin(t * Math.PI);
-    const bladeLen = length * 0.24 * (0.35 + env * 0.85);
-    const bladeAngle = tanAngle + sideSign * (0.55 + t * 0.35);
+    const bladeLen = length * 0.26 * (0.32 + env * 0.92);
+    const bladeAngle = tanAngle + dir * (0.62 + t * 0.42);
     const bx = px + Math.cos(bladeAngle) * bladeLen;
-    const by = py + Math.sin(bladeAngle) * bladeLen + bladeLen * 0.32;
-    const bmx = (px + bx) * 0.5 + Math.cos(bladeAngle - sideSign * 0.25) * bladeLen * 0.14;
+    const by = py + Math.sin(bladeAngle) * bladeLen + bladeLen * 0.36;
+    const bmx = (px + bx) * 0.5 + Math.cos(bladeAngle - dir * 0.28) * bladeLen * 0.14;
     const bmy = (py + by) * 0.5;
 
     ctx.beginPath();
     ctx.moveTo(px, py);
     ctx.quadraticCurveTo(bmx, bmy, bx, by);
-    ctx.lineTo(px + Math.cos(tanAngle) * (length / leafletCount) * 0.65, py + Math.sin(tanAngle) * (length / leafletCount) * 0.65);
+    ctx.lineTo(
+      px + Math.cos(tanAngle) * (length / leafletCount) * 0.62,
+      py + Math.sin(tanAngle) * (length / leafletCount) * 0.62
+    );
     ctx.closePath();
     ctx.fill();
   }
 }
 
-/** Draws a single palm tree with curved tapered bezier trunk and radial fan of fronds. */
+/** Mixes a hex silhouette colour toward white/black for the frond depth shades. */
+function shadeColor(hex, amount) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const target = amount >= 0 ? 255 : 0;
+  const t = Math.abs(amount);
+  const mix = (c) => Math.round(c + (target - c) * t);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+
+/** Draws a single palm tree with curved tapered trunk, layered frond crown and coconuts. */
 function drawPalmTree(ctx, baseX, baseY, height, lean, scale, rng, color) {
   const tipX = baseX + lean;
   const tipY = baseY - height;
-  const ctrlX = baseX + lean * 0.32 + randRange(rng, -height * 0.08, height * 0.08);
+  const ctrlX = baseX + lean * 0.34 + randRange(rng, -height * 0.09, height * 0.09);
   const ctrlY = baseY - height * 0.52;
 
-  const baseHalfW = Math.max(4, height * 0.042 * scale);
-  const tipHalfW = Math.max(1.8, height * 0.013 * scale);
+  const baseHalfW = Math.max(4, height * 0.045 * scale);
+  const tipHalfW = Math.max(1.8, height * 0.014 * scale);
 
   ctx.save();
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
 
+  // Curved, tapered trunk
   ctx.beginPath();
   ctx.moveTo(baseX - baseHalfW, baseY + 6);
-  ctx.quadraticCurveTo(ctrlX - (baseHalfW + tipHalfW) * 0.45, ctrlY, tipX - tipHalfW, tipY);
+  ctx.quadraticCurveTo(ctrlX - (baseHalfW + tipHalfW) * 0.48, ctrlY, tipX - tipHalfW, tipY);
   ctx.lineTo(tipX + tipHalfW, tipY);
-  ctx.quadraticCurveTo(ctrlX + (baseHalfW + tipHalfW) * 0.45, ctrlY, baseX + baseHalfW, baseY + 6);
+  ctx.quadraticCurveTo(ctrlX + (baseHalfW + tipHalfW) * 0.48, ctrlY, baseX + baseHalfW, baseY + 6);
   ctx.closePath();
   ctx.fill();
 
-  const nutR = Math.max(2, tipHalfW * 1.15);
+  // Two lighter trunk facets so the curve reads against the sky
+  ctx.save();
+  ctx.strokeStyle = shadeColor(color, 0.16);
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = Math.max(1, baseHalfW * 0.3);
+  ctx.beginPath();
+  ctx.moveTo(baseX - baseHalfW * 0.35, baseY + 4);
+  ctx.quadraticCurveTo(ctrlX - baseHalfW * 0.2, ctrlY, tipX - tipHalfW * 0.4, tipY + 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // Crown of coconuts
+  const nutR = Math.max(2, tipHalfW * 1.2);
+  ctx.fillStyle = shadeColor(color, 0.08);
   for (let c = -1; c <= 1; c++) {
     ctx.beginPath();
-    ctx.arc(tipX + c * nutR * 0.9, tipY + nutR * 0.9, nutR, 0, Math.PI * 2);
+    ctx.arc(tipX + c * nutR * 0.95, tipY + nutR * (0.85 + Math.abs(c) * 0.18), nutR, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  const frondCount = randInt(rng, 8, 10);
+  // Layered fronds: back shades first, brightest on top, 9-13 per tree
+  const frondCount = randInt(rng, 9, 13);
+  const shadeBack = shadeColor(color, 0.2);
+  const shadeMid = shadeColor(color, 0.34);
+  const shadeFront = shadeColor(color, 0.5);
+
   for (let i = 0; i < frondCount; i++) {
-    const frac = i / (frondCount - 1);
-    const angle = (-Math.PI * 1.08) + frac * (Math.PI * 1.16) + randRange(rng, -0.09, 0.09);
-    const frondLen = height * randRange(rng, 0.30, 0.46);
-    const droop = frondLen * randRange(rng, 0.18, 0.42);
-    const leaflets = randInt(rng, 11, 16);
-    const spineThick = Math.max(1.5, height * 0.0085);
-    drawPalmFrond(ctx, tipX, tipY, angle, frondLen, droop, leaflets, spineThick);
+    const frac = i / Math.max(1, frondCount - 1);
+    const angle = -Math.PI * 1.12 + frac * (Math.PI * 1.24) + randRange(rng, -0.12, 0.12);
+    const frondLen = height * randRange(rng, 0.28, 0.5);
+    const droop = frondLen * randRange(rng, 0.16, 0.5);
+    const leaflets = randInt(rng, 10, 18);
+    const spineThick = Math.max(1.4, height * 0.0075 * scale);
+    const isFront = randRange(rng, -1, 1) > 0.15;
+    const fill = i < frondCount * 0.34 ? shadeBack : isFront ? shadeFront : shadeMid;
+    const sideSign = randRange(rng, -1, 1) >= 0 ? 1 : -1;
+    drawPalmFrond(ctx, tipX, tipY, angle, frondLen, droop, leaflets, spineThick, fill, sideSign);
   }
 
   ctx.restore();
